@@ -1,189 +1,197 @@
-<!doctype html>
-<title>System Font CSS</title>
-<meta charset="utf-8">
-<meta http-equiv="x-ua-compatible" content="ie=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="system-font.css" rel="stylesheet">
-<style>
-@font-face {
-	font-family: monospace;
-	font-style: normal;
-	font-weight: 400;
-	src: local("Menlo-Regular"), local("Monaco"), local("Consolas"), local("DejaVu Sans Mono"), local("DejaVu Sans Mono");
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>نظام إدارة الموظفين</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0f0f0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #aaa;
+    }
+    input, select, button {
+      padding: 8px;
+      margin: 5px 0;
+      width: 100%;
+    }
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+    table, th, td {
+      border: 1px solid #aaa;
+    }
+    th, td {
+      padding: 8px;
+      text-align: center;
+    }
+    .actions button {
+      margin: 2px;
+    }
+    #msg {
+      color: green;
+      text-align: right;
+      margin-bottom: 10px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>نظام إدارة الموظفين</h2>
+
+  <div id="msg"></div>
+
+  <label>الاسم:</label>
+  <input type="text" id="name" />
+
+  <label>الجنس:</label>
+  <select id="gender">
+    <option>ذكر</option>
+    <option>أنثى</option>
+  </select>
+
+  <label>المدينة:</label>
+  <select id="city">
+    <option>أربيل</option>
+    <option>دهوك</option>
+  </select>
+
+  <label>تاريخ الميلاد:</label>
+  <input type="date" id="birthdate" />
+
+  <button onclick="addEmployee()">➕ إضافة موظف</button>
+  <button onclick="displayEmployees()">👁️ عرض الموظفين</button>
+
+  <label>🔍 بحث بالاسم:</label>
+  <input type="text" id="searchInput" oninput="searchEmployee()" placeholder="اكتب اسم الموظف..." />
+
+  <table id="employeeTable" style="display:none;">
+    <thead>
+      <tr>
+        <th>تسلسل</th>
+        <th>الاسم</th>
+        <th>الجنس</th>
+        <th>المدينة</th>
+        <th>تاريخ الميلاد</th>
+        <th>تاريخ التسجيل</th>
+        <th>الوقت</th>
+        <th>عدد الأيام</th>
+        <th>إجراءات</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+let employees = JSON.parse(localStorage.getItem("employees") || "[]");
+
+function showMessage(text) {
+  const msg = document.getElementById("msg");
+  msg.innerText = text;
+  msg.style.display = "block";
+  setTimeout(() => msg.style.display = "none", 3000);
 }
 
-@font-face {
-	font-family: monospace;
-	font-style: italic;
-	font-weight: 400;
-	src: local("Menlo-Regular"), local("Monaco"), local("Consolas-Italic"), local("DejaVu Sans Mono Oblique");
+function addEmployee() {
+  const name = document.getElementById("name").value.trim();
+  const gender = document.getElementById("gender").value;
+  const city = document.getElementById("city").value;
+  const birthdate = document.getElementById("birthdate").value;
+
+  if (!name || !birthdate) {
+    alert("يرجى إدخال جميع البيانات.");
+    return;
+  }
+
+  const now = new Date();
+  const registerDate = now.toLocaleDateString('ar-EG');
+  const time = now.toLocaleTimeString('ar-EG');
+  const birth = new Date(birthdate);
+  const ageDays = Math.floor((now - birth) / (1000 * 60 * 60 * 24));
+  const serial = employees.length + 1;
+
+  const employee = { serial, name, gender, city, birthdate, registerDate, time, ageDays };
+  employees.push(employee);
+  localStorage.setItem("employees", JSON.stringify(employees));
+
+  showMessage("✅ تم تسجيل الموظف بنجاح");
+  clearForm();
+  displayEmployees();
 }
 
-@font-face {
-	font-family: monospace;
-	font-style: normal;
-	font-weight: 700;
-	src: local("Menlo-Regular"), local("Monaco"), local("Consolas-Bold"), local("DejaVu Sans Mono Bold");
+function displayEmployees() {
+  const table = document.getElementById("employeeTable");
+  const tbody = table.querySelector("tbody");
+  tbody.innerHTML = "";
+  employees.forEach((emp, index) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${emp.serial}</td>
+      <td>${emp.name}</td>
+      <td>${emp.gender}</td>
+      <td>${emp.city}</td>
+      <td>${emp.birthdate}</td>
+      <td>${emp.registerDate}</td>
+      <td>${emp.time}</td>
+      <td>${emp.ageDays}</td>
+      <td class="actions">
+        <button onclick="editEmployee(${index})">✏️ تعديل</button>
+        <button onclick="deleteEmployee(${index})">🗑️ حذف</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+  table.style.display = "table";
 }
 
-@font-face {
-	font-family: monospace;
-	font-style: italic;
-	font-weight: 700;
-	src: local("Menlo-Regular"), local("Monaco"), local("Consolas-BoldItalic"), local("DejaVu Sans Mono Bold Oblique");
+function clearForm() {
+  document.getElementById("name").value = "";
+  document.getElementById("birthdate").value = "";
 }
 
-body {
-	font: 1em/1.6 system-ui, Tahoma, sans-serif;
-	margin: 3em auto;
-	max-width: 40em;
+function deleteEmployee(index) {
+  const emp = employees[index];
+  if (confirm(`هل تريد حذف ${emp.name}؟`)) {
+    employees.splice(index, 1);
+    localStorage.setItem("employees", JSON.stringify(employees));
+    displayEmployees();
+    showMessage("🗑️ تم حذف الموظف");
+  }
 }
 
-@media (max-width: 42em) {
-	body {
-		margin: 3em 1em;
-	}
+function editEmployee(index) {
+  const emp = employees[index];
+  const name = prompt("تعديل الاسم:", emp.name);
+  if (name) {
+    emp.name = name;
+    localStorage.setItem("employees", JSON.stringify(employees));
+    displayEmployees();
+    showMessage("✏️ تم تعديل الموظف");
+  }
 }
 
-h1,
-h2 {
-	border-bottom: 1px solid #eee;
-	padding-bottom: .3em;
+function searchEmployee() {
+  const value = document.getElementById("searchInput").value.trim();
+  const rows = document.querySelectorAll("#employeeTable tbody tr");
+  rows.forEach(row => {
+    const name = row.children[1].textContent;
+    row.style.display = name.includes(value) ? "" : "none";
+  });
 }
+</script>
 
-h1 {
-	margin: 1em 0 1rem;
-	font-size: 2.25em;
-}
+</body>
+</html>
 
-h2 {
-	font-size: 1.75em;
-	line-height: 1.225;
-	margin: 1em 0 1rem;
-}
-
-code,
-pre {
-	border-radius: 3px;
-	font-family: "monospace", monospace;
-	font-size: 85%;
-}
-
-p,
-pre {
-	margin: 0 0 1em;
-}
-
-code {
-	background-color: rgba(0,0,0,.04);
-	padding: .2em;
-}
-
-pre {
-	background-color: #f7f7f7;
-	line-height: 1.45;
-	padding: 1em;
-	-moz-tab-size: 4;
-	tab-size: 4;
-}
-
-a {
-	color: #4078c0;
-	text-decoration: none;
-}
-
-a:focus,
-a:hover {
-	text-decoration: underline;
-}
-
-.token-selector {
-	color: #0A0;
-}
-
-.token-property-name {
-	color: #44B;
-}
-
-.token-property-value {
-	color: #B50;
-}
-</style>
-
-<h1>
-	System Font CSS
-</h1>
-
-<p>
-	System Font CSS is set of <code>@font-face</code> rules that let you use the native system font of the OS running the browser.
-</p>
-
-<pre>
-<span class="token-selector">body</span> {
-    <span class="token-property-name">font-family</span>: <span class="token-property-value">system</span>;
-}
-</pre>
-
-<p>
-	<a href="https://github.com/jonathantneal/system-font-css">system-font.css</a> offers eight variations of the <code>system</code> font family; <strong>light</strong> (300) <strong>light italic</strong>, <strong>normal</strong> (400), <strong>normal italic</strong>, <strong>medium</strong> (500), <strong>medium italic</strong>, <strong>bold</strong> (700), and <strong>bold italic</strong>.
-</p>
-
-<pre>
-<span class="token-selector">blockquote</span> {
-    <span class="token-property-name">font</span>: <span class="token-property-value">italic 300 system</span>;
-}
-
-<span class="token-selector">p</span> {
-    <span class="token-property-name">font</span>: <span class="token-property-value">400 system</span>;
-}
-</pre>
-
-<h2>
-	OSX
-</h2>
-
-<p>
-	<strong>OSX</strong> has used three system typefaces. Since <strong>El Capitan</strong> it has used <strong>San Fransisco</strong>. In <strong>Yosemite</strong> it used <strong>Helvetica Neue</strong>. From <strong>Mavericks</strong> back to <strong>Kodiak</strong> it used <strong>Lucida Grande</strong>.
-</p>
-
-<h2>
-	Windows
-</h2>
-
-<p>
-	<strong>Windows</strong> has used four system typefaces. Since <strong>Vista</strong> it has used <strong>Segoe UI</strong>. In XP, it used <strong>Tahoma</strong>, which oddly enough lacks an italic variation. From <strong>Windows ME</strong> back to <strong>Windows 3.1</strong> it used <strong>Microsoft Sans Serif</strong>. Finally, from <strong>Windows 2.0</strong> back to <strong>Windows 1.0</strong> it used <strong>Fixedsys</strong>. Neither <strong>Microsoft Sans Serif</strong> or <strong>Fixedsys</strong> are included in this set, with apologies.
-</p>
-
-<p>
-	Also, for those of opposed to joy, remember that <strong>Internet Explorer 8</strong> does not support local <code>@font-face</code> rules. Therefore, should you need to reference system fonts in that browser then you will need to do so from the <code>font</code> declaration.
-</p>
-
-<pre>
-<span class="token-selector">body</span> {
-	<span class="token-property-name">font-family</span>: <span class="token-property-value">system, "Segoe UI", Tahoma</span>;
-}
-</pre>
-
-<h2>
-	Android
-</h2>
-
-<p>
-	<strong>Android</strong> has used two system typefaces. Since <strong>Ice Cream Sandwich</strong> it has used <strong>Roboto</strong>. From <strong>Jelly Bean</strong> back to <strong>Cupcake</strong> it used <strong>Droid Sans</strong>, which also lacks an italic variation. Do you suppose OS developers dislike <em>emphasis</em>?
-</p>
-
-<h2>
-	Ubuntu
-</h2>
-
-<p>
-	Ubuntu has always used one system typeface, apty named <strong>Ubuntu</strong>. That part was easy.
-</p>
-
-<h2>
-	Is <code>system</code> going to be a thing?
-</h2>
-
-<p>
-	Maybe. There are <a href="https://lists.w3.org/Archives/Public/www-style/2015Jul/0169.html" target="_blank">discussions in the W3C</a> to standardize a generic <code>system</code> family.
-</p>
